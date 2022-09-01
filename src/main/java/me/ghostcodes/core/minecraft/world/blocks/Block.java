@@ -40,7 +40,7 @@ public class Block {
     public void setCubeOffset(int offset){
         this.cubeOffset = offset;
         for(Quad q : quads){
-            q.addToIndices(offset * 20 + offset);
+            q.addToIndices(offset * 20 + offset+3*offset);
         }
     }
 

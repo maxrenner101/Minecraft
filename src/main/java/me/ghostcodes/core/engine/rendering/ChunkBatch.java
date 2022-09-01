@@ -2,6 +2,7 @@ package me.ghostcodes.core.engine.rendering;
 
 import lombok.Getter;
 import me.ghostcodes.core.minecraft.world.Chunk;
+import org.lwjgl.system.MemoryUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,6 +21,8 @@ public class ChunkBatch {
         this.chunk = chunk;
         ArrayList<Float> tempVertices = new ArrayList<>();
         float[] vertices = new float[Chunk.MAX_CUBES * 6 * 4 * 3];
+        float[] colors = new float[Chunk.MAX_CUBES * 6 * 4 * 3];
+        ArrayList<Float> tempColors = new ArrayList<>();
         ArrayList<Integer> tempIndices = new ArrayList<>();
         int[] indices = new int[Chunk.MAX_CUBES * 6 * 6];
         for(int i = 0; i < chunk.getBlocks().length; i++){
@@ -28,6 +31,9 @@ public class ChunkBatch {
                     tempVertices.add(chunk.getBlocks()[i].getQuads()[j].getVertices()[k].getX());
                     tempVertices.add(chunk.getBlocks()[i].getQuads()[j].getVertices()[k].getY());
                     tempVertices.add(chunk.getBlocks()[i].getQuads()[j].getVertices()[k].getZ());
+                    tempColors.add(chunk.getBlocks()[i].getQuads()[j].getVertices()[k].getColorx());
+                    tempColors.add(chunk.getBlocks()[i].getQuads()[j].getVertices()[k].getColory());
+                    tempColors.add(chunk.getBlocks()[i].getQuads()[j].getVertices()[k].getColorz());
                 }
 
                 for(int k = 0; k < chunk.getBlocks()[i].getQuads()[j].getIndices().length; k++){
@@ -38,13 +44,14 @@ public class ChunkBatch {
 
         for(int i  = 0; i < vertices.length; i++){
             vertices[i] = tempVertices.get(i);
-            if(i < 50){
-                System.out.print(vertices[i] + " ");
-            }
         }
 
         for(int i  = 0; i < indices.length; i++){
             indices[i] = tempIndices.get(i);
+        }
+
+        for(int i = 0; i < colors.length; i++){
+            colors[i] = tempColors.get(i);
         }
 
 
@@ -56,9 +63,16 @@ public class ChunkBatch {
         glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW);
         glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
 
-        int[] localLocations = new int[chunk.getBlocks().length];
-        for(int i = 0; i < localLocations.length; i++){
-            localLocations[i] = chunk.getBlocks()[i].getLocalLocation();
+        int[] localLocations = new int[chunk.getBlocks().length * 6 * 6];
+        ArrayList<Integer> tempLocalLocations = new ArrayList<>();
+        for(int i = 0; i < chunk.getBlocks().length; i++){
+            for(int j = 0; j < 18; j++) {
+                tempLocalLocations.add(chunk.getBlocks()[i].getLocalLocation());
+            }
+        }
+
+        for(int i = 0; i < tempLocalLocations.size(); i++){
+            localLocations[i] = tempLocalLocations.get(i);
         }
 
         vbo = glGenBuffers();
@@ -66,9 +80,18 @@ public class ChunkBatch {
         glBufferData(GL_ARRAY_BUFFER, localLocations, GL_STATIC_DRAW);
         glVertexAttribIPointer(1, 1, GL_UNSIGNED_INT, 0, 0);
 
+        vbo = glGenBuffers();
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, colors, GL_STATIC_DRAW);
+        glVertexAttribPointer(2, 3, GL_FLOAT, false, 0,0);
+
         ebo = glGenBuffers();
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
     }
 
     public void render(){
@@ -76,11 +99,13 @@ public class ChunkBatch {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(2);
 
-        glDrawElements(GL_TRIANGLES, Chunk.MAX_CUBES * 6 * 6, GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, Chunk.MAX_CUBES * 6 * 6, GL_UNSIGNED_INT, MemoryUtil.NULL);
 
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
+        glDisableVertexAttribArray(2);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }

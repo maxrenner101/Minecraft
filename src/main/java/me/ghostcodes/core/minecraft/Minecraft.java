@@ -29,25 +29,25 @@ public class Minecraft implements FunctionDouble {
         Camera.setVz(0);
 
         if(KeyboardListener.isKeyPressed(GLFW_KEY_W)){
-            Vector3f adjustment = new Vector3f(localZ.mul(0.02f));
+            Vector3f adjustment = new Vector3f(localZ.mul(0.1f));
 
             Camera.setVx(Camera.getVx() + adjustment.x);
             Camera.setVz(Camera.getVz() + adjustment.z);
         }
         if(KeyboardListener.isKeyPressed(GLFW_KEY_S)){
-            Vector3f adjustment = new Vector3f(localZ.mul(-0.02f));
+            Vector3f adjustment = new Vector3f(localZ.mul(-0.1f));
 
             Camera.setVx(Camera.getVx() + adjustment.x);
             Camera.setVz(Camera.getVz() + adjustment.z);
         }
         if(KeyboardListener.isKeyPressed(GLFW_KEY_A)){
-            Vector3f adjustment = new Vector3f(localX.mul(-0.02f));
+            Vector3f adjustment = new Vector3f(localX.mul(-0.1f));
 
             Camera.setVx(Camera.getVx() + adjustment.x);
             Camera.setVz(Camera.getVz() + adjustment.z);
         }
         if(KeyboardListener.isKeyPressed(GLFW_KEY_D)){
-            Vector3f adjustment = new Vector3f(localX.mul(0.02f));
+            Vector3f adjustment = new Vector3f(localX.mul(0.1f));
 
             Camera.setVx(Camera.getVx() + adjustment.x);
             Camera.setVz(Camera.getVz() + adjustment.z);

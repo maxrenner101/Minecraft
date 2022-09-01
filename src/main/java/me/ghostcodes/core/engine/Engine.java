@@ -57,19 +57,31 @@ public class Engine {
 
         glClearColor(0,0,0,1);
 
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+
+        double lastTime = glfwGetTime();
+        int frames = 0;
 
         while(!glfwWindowShouldClose(window.getWindow())){
             MouseListener.handleInput();
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glCullFace(GL_BACK);
 
             update.apply(0);
             render.apply();
+            frames++;
 
             glfwSwapBuffers(window.getWindow());
 
             glfwPollEvents();
+
+            if(glfwGetTime() - lastTime > 1.0){
+                System.out.println("FPS: " + frames);
+                frames = 0;
+                lastTime += 1.0;
+            }
 
         }
     }

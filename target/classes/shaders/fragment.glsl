@@ -1,8 +1,10 @@
 #type fragment
 #version 330
 
+in vec3 fColor;
+
 out vec4 color;
 
 void main() {
-    color = vec4(0.2,0.5,0.7,1);
+    color = vec4(fColor, 1);
 }
