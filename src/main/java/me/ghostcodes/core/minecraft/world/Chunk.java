@@ -10,7 +10,7 @@ import java.util.Arrays;
 
 public class Chunk {
 
-    public final static int LENGTH = 16, WIDTH = 16, HEIGHT = 16, MAX_CUBES = LENGTH * WIDTH * HEIGHT;
+    public final static int LENGTH = 1, WIDTH = 1, HEIGHT = 1, MAX_CUBES = LENGTH * WIDTH * HEIGHT;
     @Getter
     private final int x, y, z;
     @Getter private final Block[] blocks = new Block[MAX_CUBES];

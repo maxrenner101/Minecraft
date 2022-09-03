@@ -22,8 +22,10 @@ public class ChunkBatch {
         ArrayList<Float> tempVertices = new ArrayList<>();
         float[] vertices = new float[Chunk.MAX_CUBES * 6 * 4 * 3];
         float[] colors = new float[Chunk.MAX_CUBES * 6 * 4 * 3];
+        float[] normals = new float[Chunk.MAX_CUBES * 6 * 4 * 3];
         ArrayList<Float> tempColors = new ArrayList<>();
         ArrayList<Integer> tempIndices = new ArrayList<>();
+        ArrayList<Float> tempNormals = new ArrayList<>();
         int[] indices = new int[Chunk.MAX_CUBES * 6 * 6];
         for(int i = 0; i < chunk.getBlocks().length; i++){
             for(int j = 0; j < chunk.getBlocks()[i].getQuads().length; j++){
@@ -34,6 +36,9 @@ public class ChunkBatch {
                     tempColors.add(chunk.getBlocks()[i].getQuads()[j].getVertices()[k].getColorx());
                     tempColors.add(chunk.getBlocks()[i].getQuads()[j].getVertices()[k].getColory());
                     tempColors.add(chunk.getBlocks()[i].getQuads()[j].getVertices()[k].getColorz());
+                    tempNormals.add(chunk.getBlocks()[i].getQuads()[j].getVertices()[k].getNormX());
+                    tempNormals.add(chunk.getBlocks()[i].getQuads()[j].getVertices()[k].getNormY());
+                    tempNormals.add(chunk.getBlocks()[i].getQuads()[j].getVertices()[k].getNormZ());
                 }
 
                 for(int k = 0; k < chunk.getBlocks()[i].getQuads()[j].getIndices().length; k++){
@@ -41,6 +46,10 @@ public class ChunkBatch {
                 }
             }
         }
+
+        System.out.println(tempNormals.size());
+        System.out.println(tempVertices.size());
+        System.out.println(tempIndices.size());
 
         for(int i  = 0; i < vertices.length; i++){
             vertices[i] = tempVertices.get(i);
@@ -52,6 +61,10 @@ public class ChunkBatch {
 
         for(int i = 0; i < colors.length; i++){
             colors[i] = tempColors.get(i);
+        }
+
+        for(int i = 0; i < normals.length; i++){
+            normals[i] = tempNormals.get(i);
         }
 
 
@@ -85,6 +98,11 @@ public class ChunkBatch {
         glBufferData(GL_ARRAY_BUFFER, colors, GL_STATIC_DRAW);
         glVertexAttribPointer(2, 3, GL_FLOAT, false, 0,0);
 
+        vbo = glGenBuffers();
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, normals, GL_STATIC_DRAW);
+        glVertexAttribPointer(3, 3, GL_FLOAT, false, 0, 0);
+
         ebo = glGenBuffers();
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW);
@@ -100,12 +118,14 @@ public class ChunkBatch {
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
         glEnableVertexAttribArray(2);
+        glEnableVertexAttribArray(3);
 
         glDrawElements(GL_TRIANGLES, Chunk.MAX_CUBES * 6 * 6, GL_UNSIGNED_INT, MemoryUtil.NULL);
 
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
         glDisableVertexAttribArray(2);
+        glDisableVertexAttribArray(3);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
