@@ -1,30 +1,26 @@
 #type vertex
 #version 330
 
-layout(location = 0) in vec3 vertex;
-layout(location = 1) in uint blockData;
-layout(location = 2) in vec3 color;
-layout(location = 3) in vec3 normal;
+layout(location = 0)in vec3 pos;
+layout(location = 1)in vec3 norm;
+layout(location = 2)in vec3 localLocation;
 
-uniform mat4 u_Proj;
-uniform mat4 u_Camera;
-uniform vec3 u_ChunkLocation;
+uniform mat4 proj;
+uniform vec3 chunkLocation;
+uniform mat4 camera;
 
-out vec3 fColor;
-out float diffuse;
+out float diffuseFactor;
 
 void main() {
-    float x = (u_ChunkLocation.x) + float(blockData & 0x1Fu) + vertex.x;
-    float y = (u_ChunkLocation.y) + float((blockData >> 5) & 0x1Fu) + vertex.y;
-    float z = (u_ChunkLocation.z) + float((blockData >> 10) & 0x1Fu) + vertex.z;
 
+    float x = chunkLocation.x + pos.x + localLocation.x;
+    float y = chunkLocation.y + pos.y + localLocation.y;
+    float z = chunkLocation.z + pos.z + localLocation.z;
 
-    vec4 finalV = vec4(x,y,z,1.0);
+    vec3 light = vec3(0,50,-20);
+    if(dot(normalize(norm), normalize(light-vec3(x,y,z))) < 0){
+        diffuseFactor = 0;
+    } else diffuseFactor = dot(normalize(norm), normalize(light-vec3(x,y,z)));
 
-    // light point at 10,10,2
-    diffuse = dot(normalize(vec3(10,0,2) - vec3(x,y,z)), normalize(normal));
-
-    fColor = color;
-
-    gl_Position = u_Proj * u_Camera * finalV;
+    gl_Position = proj * camera * vec4(x,y,z,1);
 }
