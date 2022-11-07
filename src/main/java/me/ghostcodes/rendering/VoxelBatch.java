@@ -1,7 +1,9 @@
 package me.ghostcodes.rendering;
 
 import lombok.Getter;
-import lombok.Setter;
+import org.joml.Vector3f;
+
+import java.util.Arrays;
 
 import static org.lwjgl.opengl.GL46.*;
 
@@ -23,11 +25,14 @@ public class VoxelBatch {
 
     private static int[] indices = getIndices();
 
-    public static final int WIDTH = 16, HEIGHT = 32, LENGTH = 16, MAX_VOXELS = WIDTH * HEIGHT * LENGTH, MAX_QUADS = MAX_VOXELS * 6, MAX_INDICES = MAX_QUADS * 6, MAX_VERTICES = MAX_QUADS * 8;
+    public static final int WIDTH = 16, HEIGHT = 16, LENGTH = 16, MAX_VOXELS = WIDTH * HEIGHT * LENGTH, MAX_QUADS = MAX_VOXELS * 6, MAX_INDICES = MAX_QUADS * 6, MAX_VERTICES = MAX_QUADS * 8;
 
-    private final int vao, vbo, ebo;
-    @Getter @Setter private boolean render;
+    private final int vao, vbo, ebo, tVao, tVbo, tEbo;
+    @Getter private boolean render;
 
+    public void setRender(boolean render){
+        this.render = render;
+    }
     @Getter private int x, y, z;
 
     public VoxelBatch(int x, int y, int z){
@@ -46,13 +51,59 @@ public class VoxelBatch {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_DYNAMIC_DRAW);
 
+        tVao = glGenVertexArrays();
+        glBindVertexArray(tVao);
+
+        tVbo = glGenBuffers();
+        glBindBuffer(GL_ARRAY_BUFFER, tVbo);
+        glBufferData(GL_ARRAY_BUFFER, Integer.BYTES * MAX_VERTICES, GL_DYNAMIC_DRAW);
+        glVertexAttribIPointer(0,2,GL_INT, 0,0);
+
+        tEbo = glGenBuffers();
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tEbo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_DYNAMIC_DRAW);
+
         unbind();
     }
 
-    public void setData(int[] data){
+    public boolean doesRayIntersect(Vector3f point, Vector3f direction){
+        float tmin, tmax, tymin, tymax, tzmin, tzmax;
+
+        tmin = (x - point.x) * direction.x;
+        tmax = ((x+VoxelBatch.WIDTH) - point.x) * direction.x;
+        tymin = (y - point.y) * direction.y;
+        tymax = ((y + VoxelBatch.HEIGHT) - point.y) * direction.y;
+
+        if ((tmin > tymax) || (tymin > tmax))
+            return true;
+
+        if (tymin > tmin)
+            tmin = tymin;
+        if (tymax < tmax)
+            tmax = tymax;
+
+        tzmin = (z - point.z) * direction.z;
+        tzmax = ((z + VoxelBatch.LENGTH) - point.z) * direction.z;
+
+        if ((tmin > tzmax) || (tzmin > tmax))
+            return true;
+
+        if (tzmin > tmin)
+            tmin = tzmin;
+        if (tzmax < tmax)
+            tmax = tzmax;
+
+        return false;
+    }
+    public void setData(int[] data, int[] tData){
         glBindVertexArray(vao);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
         glBufferSubData(GL_ARRAY_BUFFER, 0, data);
+
+        glBindVertexArray(tVao);
+        glBindBuffer(GL_ARRAY_BUFFER, tVbo);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, tData);
+
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }
@@ -63,13 +114,19 @@ public class VoxelBatch {
         glBindVertexArray(0);
     }
 
-    public void draw() {
+    public void tDraw(){
+        glBindVertexArray(tVao);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tEbo);
+        glEnableVertexAttribArray(0);
         glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
+        unbind();
     }
 
-    public void bind(){
+    public void draw() {
         glBindVertexArray(vao);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glEnableVertexAttribArray(0);
+        glDrawElements(GL_TRIANGLES, indices.length, GL_UNSIGNED_INT, 0);
+        unbind();
     }
 }

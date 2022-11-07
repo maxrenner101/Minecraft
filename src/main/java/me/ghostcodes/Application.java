@@ -8,6 +8,7 @@ import me.ghostcodes.rendering.Renderer;
 import org.lwjgl.glfw.GLFWVidMode;
 import org.lwjgl.opengl.GL;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,25 +17,24 @@ import static org.lwjgl.opengl.GL46.*;
 
 public class Application extends Thread {
     private long window;
-    private int width = 1920, height = 1080;
+    private int width = 1280, height = 720;
+    private boolean fullscreen = false, wireframe = false;
     @Getter private double FPS = 240, UPS = 60, aspectRatio = (double)width/height;
-    private boolean wireFrame = false;
-    private Minecraft minecraft;
 
     @Override
     public void run(){
         Map<Integer, Integer> windowHints = new HashMap<>();
+        windowHints.put(GLFW_SAMPLES, 4);
         window = createWindow(windowHints);
         doWindowSettings();
-        minecraft = new Minecraft(this::fullscreenWindow);
-        loop(window, new Renderer(Main.class.getClassLoader().getResource("voxelShaders").getPath(), minecraft), minecraft);
+        Minecraft minecraft = new Minecraft();
+        loop(window, new Renderer("voxelShaders", minecraft), minecraft);
     }
 
     private void loop(long window, Renderer renderer, Minecraft minecraft){
         double lastUpdate = 0, lastFrame = 0, lastPrint = 0;
         int frames = 0, updates = 0;
-
-        glClearColor(0.5f,1,1,1);
+        boolean fullscreenToggled = false, wireframeToggled = false;
 
         while(!glfwWindowShouldClose(window)){
             double currentTime = glfwGetTime();
@@ -43,6 +43,23 @@ public class Application extends Thread {
             if(deltaTime > timeBetweenUpdate){
                 glfwPollEvents();
                 MouseListener.pollInput();
+                if(KeyListener.isKeyPressed(GLFW_KEY_F11)){
+                    if(!fullscreenToggled){
+                        toggleFullscreen();
+                        fullscreenToggled = true;
+                    }
+                } else {
+                    fullscreenToggled = false;
+                }
+
+                if(KeyListener.isKeyPressed(GLFW_KEY_F3)){
+                    if(!wireframeToggled){
+                        toggleWireframe();
+                        wireframeToggled = true;
+                    }
+                } else {
+                    wireframeToggled = false;
+                }
                 minecraft.apply(deltaTime);
                 lastUpdate = currentTime;
                 updates++;
@@ -50,7 +67,19 @@ public class Application extends Thread {
 
             if(currentTime - lastFrame > timeBetweenFrame){
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                glDisable(GL_CULL_FACE);
+                glEnable(GL_BLEND);
+                glEnable(GL_LINE_SMOOTH);
+                glEnable(GL_COLOR_MATERIAL);
+                glEnable(GL_DEPTH_TEST);
+                glEnable(GL_MULTISAMPLE);
                 renderer.render(aspectRatio);
+                glDisable(GL_MULTISAMPLE);
+                glDisable(GL_DEPTH_TEST);
+                glDisable(GL_BLEND);
+                glDisable(GL_LINE_SMOOTH);
+                glDisable(GL_COLOR_MATERIAL);
+                glEnable(GL_CULL_FACE);
                 glfwSwapBuffers(window);
                 lastFrame = currentTime;
                 frames++;
@@ -93,14 +122,10 @@ public class Application extends Thread {
 
         glfwShowWindow(window);
         GL.createCapabilities();
-
-        glEnable(GL_NORMALIZE);
-        glEnable(GL_COLOR_MATERIAL);
-        glEnable(GL_BLEND);
-        glEnable(GL_DEPTH_TEST);
+        glCullFace(GL_BACK);
         glDepthFunc(GL_LESS);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glShadeModel(GL_SMOOTH);
+        glShadeModel(GL_FLAT);
     }
 
     private void centerWindow(){
@@ -117,15 +142,22 @@ public class Application extends Thread {
         centerWindow();
     }
 
-    private Void fullscreenWindow(Boolean fullscreen){
-        if(!fullscreen) {
-            GLFWVidMode vid = glfwGetVideoMode(glfwGetPrimaryMonitor());
-            assert vid != null;
+    private void toggleFullscreen(){
+        fullscreen = !fullscreen;
+        if(fullscreen) {
+            glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, width, height, -1);
+        } else {
             glfwSetWindowMonitor(window,0,0,0, width, height, -1);
             centerWindow();
-            return null;
         }
-        glfwSetWindowMonitor(window,glfwGetPrimaryMonitor(),0,0,width,height, -1);
-        return null;
+    }
+
+    private void toggleWireframe(){
+        wireframe = !wireframe;
+        if(wireframe){
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        } else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
     }
 }

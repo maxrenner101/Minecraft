@@ -34,7 +34,6 @@ public class PerlinNoiseGenerator {
         double x2Inter = lerp(u, d3, d4);
 
         return lerp(v, x1Inter, x2Inter);
-
     }
 
     private double lerp(double amount, double left, double right) {

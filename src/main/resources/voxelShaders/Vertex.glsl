@@ -1,47 +1,52 @@
 #type vertex
-#version 330
+#version 460 core
+
+const float quads[] = float[](
+0,1,0,
+0,1,1,
+1,1,1,
+1,1,0, // top
+
+0,0,0,
+0,0,1,
+1,0,1,
+1,0,0, // bottom
+
+0,0,0,
+0,1,0,
+0,1,1,
+0,0,1, // left
+
+1,0,0,
+1,1,0,
+1,1,1,
+1,0,1, // right
+
+0,0,1,
+0,1,1,
+1,1,1,
+1,0,1,// front
+
+0,0,0,
+0,1,0,
+1,1,0,
+1,0,0// back
+);
+
 
 layout(location = 0)in ivec2 data;
 
+uniform float waterFog;
 uniform vec3 chunkLocation;
 uniform mat4 projection;
 uniform mat4 view;
-
-const float quads[] = float[](
--0.0000001,1.0000001,-0.0000001,
--0.0000001,1.0000001,1.0000001,
-1.0000001,1.0000001,1.0000001,
-1.0000001,1.0000001,-0.0000001, // top
-
--0.0000001,-0.0000001,-0.0000001,
--0.0000001,-0.0000001,1.0000001,
-1.0000001,-0.0000001,1.0000001,
-1.0000001,-0.0000001,-0.0000001, // bottom
-
--0.0000001,-0.0000001,-0.0000001,
--0.0000001,1.0000001,-0.0000001,
--0.0000001,1.0000001,1.0000001,
--0.0000001,-0.0000001,1.0000001, // left
-
-1.0000001,-0.0000001,-0.0000001,
-1.0000001,1.0000001,-0.0000001,
-1.0000001,1.0000001,1.0000001,
-1.0000001,-0.0000001,1.0000001, // right
-
--0.0000001,-0.0000001,1.0000001,
--0.0000001,1.0000001,1.0000001,
-1.0000001,1.0000001,1.0000001,
-1.0000001,-0.0000001,1.0000001,// front
-
--0.0000001,-0.0000001,-0.0000001,
--0.0000001,1.0000001,-0.0000001,
-1.0000001,1.0000001,-0.0000001,
-1.0000001,-0.0000001,-0.0000001// back
-);
+//uniform vec3 playerPos;
 
 out float diffuseFactor;
 out float ambientFactor;
 out vec2 texCord;
+out float waterFactor;
+out float translucent;
 
 void main(){
 
@@ -53,12 +58,18 @@ void main(){
         float y = chunkLocation.y + ((data.x >> 5) & 0x1F) + quads[vert + 1];
         float z = chunkLocation.z + ((data.x >> 10) & 0x1F) + quads[vert + 2];
 
+        if(waterFog > 0)
+        waterFactor = 1;
+        else
+        waterFactor = 0;
+
         vec3 normal = vec3((int(side) == 0) ? vec3(0, 1, 0) : (int(side) == 1) ? vec3(0, -1, 0) : (int(side) == 2) ? vec3(-1, 0, 0) : (int(side) == 3) ? vec3(1, 0, 0) : (int(side) == 4) ? vec3(0, 0, 1) : vec3(0, 0, -1));
 
-        diffuseFactor = dot(normalize(normal), normalize(vec3(-2, 10, -4)));
+        diffuseFactor = dot(normalize(normal), normalize(vec3(-2, 3, 0)));
         if (diffuseFactor < 0)
         diffuseFactor = 0;
         ambientFactor = 0.4;
+        translucent = 0;
 
         if (blockType == 1){
             float texCords[] = float[](
@@ -92,6 +103,25 @@ void main(){
             0.375,0,
             0.5,0,
             0.5,0.125
+            );
+            texCord = vec2(texCords[(data.x >> 22) * 2],texCords[((data.x >> 22) * 2)+1]);
+        }
+        else if (blockType == 4){
+            float texCords[] = float[](
+            0.625,0.125,
+            0.625,0,
+            0.75,0,
+            0.75,0.125
+            );
+            texCord = vec2(texCords[(data.x >> 22) * 2],texCords[((data.x >> 22) * 2)+1]);
+            translucent = 1;
+        }
+        else if (blockType == 5){
+            float texCords[] = float[](
+            0.75,0.125,
+            0.75,0,
+            0.875,0,
+            0.875,0.125
             );
             texCord = vec2(texCords[(data.x >> 22) * 2],texCords[((data.x >> 22) * 2)+1]);
         }

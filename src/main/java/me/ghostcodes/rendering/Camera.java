@@ -7,8 +7,8 @@ import org.joml.Quaternionf;
 
 public class Camera {
     private static Camera instance;
-    @Getter @Setter private float FOV = 90f;
-    @Getter @Setter private float x = 0, y = 140, z = 0, vx = 0, vz = 0;
+    @Getter @Setter private float FOV = 100f;
+    @Getter @Setter private float x = 0, y = 140, z = 0, vx = 0, vz = 0, lastX = 0, lastY = 0, lastZ = 0;
     @Getter private final Quaternionf rotation = new Quaternionf();
     private Matrix4f projection = null;
 

@@ -2,12 +2,14 @@ package me.ghostcodes.io;
 
 import lombok.Getter;
 
+import java.util.Arrays;
+
 import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
 import static org.lwjgl.glfw.GLFW.GLFW_REPEAT;
 
 public class MouseListener {
     @Getter private static double x = 0,y = 0,deltaX = 0,deltaY = 0,lastX = 0,lastY = 0;
-    private static boolean[] buttons = new boolean[12];
+    private static final boolean[] buttons = new boolean[12];
 
     public static void cursor_position_callback(long window, double xpos, double ypos){
         x = xpos;
@@ -21,7 +23,7 @@ public class MouseListener {
         lastY = y;
     }
 
-    public boolean isButtonPressed(int button){
+    public static boolean isButtonPressed(int button){
         return buttons[button];
     }
 
